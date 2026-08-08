@@ -115,4 +115,6 @@ type Summary struct {
 	LiveCount          int        `json:"liveCount"`
 	ParseCount         int        `json:"parseCount"`
 	LastError          *LastError `json:"lastError"`
+	SubscriptionCount  int        `json:"subscriptionCount,omitempty"`
+	ChildCount         int        `json:"childCount,omitempty"`
 }

@@ -1,11 +1,13 @@
 package cms
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
+
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/textenc"
 )
 
 // Normalized is CMS JSON-shaped data from XML or JSON.
@@ -97,18 +99,20 @@ type xmlDD struct {
 
 // ParseLegacyXML converts apple CMS XML into Normalized.
 func ParseLegacyXML(data []byte) (*Normalized, error) {
-	dec := xml.NewDecoder(strings.NewReader(string(data)))
+	// Prefer xml CharsetReader for declared encodings; DecodeBytes covers
+	// undeclared / mislabeled GBK bodies and rewrites the declaration to UTF-8.
+	data = textenc.DecodeBytes(data)
+	dec := xml.NewDecoder(bytes.NewReader(data))
 	dec.Strict = false
-	dec.CharsetReader = func(charset string, input io.Reader) (io.Reader, error) {
-		return input, nil // assume utf-8 / already decoded
-	}
+	dec.CharsetReader = textenc.CharsetReader
 
 	var root rssRoot
 	if err := dec.Decode(&root); err != nil {
 		// try wrapping
-		wrapped := []byte("<rss>" + string(data) + "</rss>")
-		dec2 := xml.NewDecoder(strings.NewReader(string(wrapped)))
+		wrapped := append([]byte("<rss>"), append(data, []byte("</rss>")...)...)
+		dec2 := xml.NewDecoder(bytes.NewReader(wrapped))
 		dec2.Strict = false
+		dec2.CharsetReader = textenc.CharsetReader
 		if err2 := dec2.Decode(&root); err2 != nil {
 			return nil, fmt.Errorf("parse cms xml: %w", err)
 		}

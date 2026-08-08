@@ -4,12 +4,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=common.sh
 source "$ROOT/scripts/common.sh"
 
-require_linux
-require_cmd go
 require_cmd docker
 
-echo "==> build-gateway"
-bash "$ROOT/scripts/build-gateway.sh"
+GW="$ROOT/release/gateway/fn-tvbox-gateway"
+if [[ -f "$GW" ]] && [[ "${FORCE_GATEWAY:-0}" != "1" ]]; then
+  echo "==> build-gateway (skip: $GW already present; set FORCE_GATEWAY=1 to rebuild)"
+else
+  require_cmd go
+  echo "==> build-gateway"
+  bash "$ROOT/scripts/build-gateway.sh"
+fi
 
 echo "==> package-addons"
 bash "$ROOT/scripts/package-addons.sh"

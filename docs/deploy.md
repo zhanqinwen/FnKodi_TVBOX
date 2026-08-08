@@ -162,7 +162,9 @@ Web 账号若沿用上游默认，注意修改密码。
 
 | 问题 | 原因 | 处理 |
 |------|------|------|
-| 源列表为空 | 订阅全是 type3 或订阅失败 | 看 `lastError` / `skippedUnsupported`；换订阅 |
+| 源列表为空 | 订阅全是 type3、子仓全停用、或订阅失败 | 看 `lastError` / `skippedUnsupported`；插件「订阅管理」检查子仓启用；`GET /api/subscriptions` |
+| 多仓未展开 | 未 sync / 索引非 JSON | 对父仓「立即同步」；确认 URL 返回 `urls/storeHouse/...` 列表 |
+| 升级后丢订阅列表 | 清了 data 卷 | 列表在 `/var/lib/fn-tvbox/subscriptions.json`（shares/tvbox/data） |
 | 能列不能播 | resolve 失败/防盗链 | 看 gateway 日志；检查 proxy |
 | 播放中途断 | 代理误用短超时 | 确认 `FNTVBOX_PROXY_HEADER_TIMEOUT_MS`；代理 Client 无整体 Timeout |
 | 插件全挂但 Kodi 还在 | gateway 崩了 | 看门狗应拉起；查崩溃日志；超上限会整容器重启 |
@@ -170,7 +172,8 @@ Web 账号若沿用上游默认，注意修改密码。
 | 无声音 | `/dev/snd` 未透传 | 补 devices |
 | 插件改了不生效 | 卷里旧 addons | 删对应 addon 或升版本强制覆盖 |
 | 调试时映射了 18765 | 忘记删除 | 去掉 compose ports；验收清单打回 |
-| Skin 加载失败 | XML/字体 | 查 `kodi.log`；确认 Noto CJK |
+| Skin 加载失败 / 切换后中文方框乱码 | 镜像缺 Noto CJK | 确认 Dockerfile 已装 `fonts-noto-cjk`；容器内存在 `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`；升级后清数据卷旧 `skin.fntvbox` |
+| 片名/分类乱码 | CMS XML/JSON 非 UTF-8 | 网关已按 charset/GBK 转 UTF-8；仍乱则抓上游 `Content-Type` 与 XML `encoding=` |
 
 ---
 

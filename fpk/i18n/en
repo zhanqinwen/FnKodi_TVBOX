@@ -15,7 +15,7 @@ config_item1_label="Do you need to support UPnP/DLNA and AirPlay for streaming o
 config_item1_options1="Yes (host)"
 config_item1_options2="No (bridge)"
 config_subscription_label="TVBox subscription URL"
-config_subscription_description="TVBox API URL (a self-hosted CMS-only test endpoint is recommended)"
+config_subscription_description="Single-warehouse or multi-warehouse index JSON URL (warehouses expand into child subscriptions; a self-hosted CMS-only test endpoint is recommended)"
 config_subscription_required="Please enter the TVBox subscription URL"
 
 install_stepTitle="Install Wizard"
@@ -27,7 +27,7 @@ install_item1_label="Do you need to support UPnP/DLNA and AirPlay for streaming 
 install_item1_options1="Yes (host)"
 install_item1_options2="No (bridge)"
 install_subscription_label="TVBox subscription URL"
-install_subscription_description="TVBox API URL (a self-hosted CMS-only test endpoint is recommended)"
+install_subscription_description="Single-warehouse or multi-warehouse index JSON URL (warehouses auto-expand; manage children later in the addon's Subscriptions screen)"
 install_subscription_required="Please enter the TVBox subscription URL"
 
 uninstall_stepTitle="Uninstall Wizard"

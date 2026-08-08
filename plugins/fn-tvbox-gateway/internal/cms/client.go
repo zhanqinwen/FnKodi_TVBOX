@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/textenc"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/tvbox"
 )
 
@@ -84,6 +85,7 @@ func (c *Client) Fetch(ctx context.Context, site tvbox.Site, op Operation, param
 	if len(data) > maxBody {
 		return nil, fmt.Errorf("cms response too large")
 	}
+	data = textenc.DecodeBytes(data)
 	ct := strings.ToLower(resp.Header.Get("Content-Type"))
 	trim := strings.TrimSpace(string(data))
 	if site.Type == 0 || strings.Contains(ct, "xml") || strings.HasPrefix(trim, "<") {

@@ -11,6 +11,7 @@ import (
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/cms"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/config"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/httpapi"
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/subs"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/t4"
 )
 
@@ -21,8 +22,12 @@ func TestHealth(t *testing.T) {
 		Version:         "0.1.0",
 		CacheTTL:        time.Minute,
 	}
-	store := catalog.NewStore(cfg.SubscriptionURL, cfg.CacheTTL, nil, nil)
-	mux := httpapi.NewMux(httpapi.Deps{Cfg: cfg, Store: store, CMS: &cms.Client{}, T4: &t4.Client{}})
+	store := catalog.NewStoreFromURL(cfg.SubscriptionURL, cfg.CacheTTL, nil, nil)
+	mux := httpapi.NewMux(httpapi.Deps{
+		Cfg: cfg, Store: store,
+		Subs: &subs.Service{Reg: store.Registry()},
+		CMS:  &cms.Client{}, T4: &t4.Client{},
+	})
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rr := httptest.NewRecorder()

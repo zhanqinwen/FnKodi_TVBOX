@@ -14,18 +14,19 @@ const (
 	warehouseConcurrency = 4
 )
 
-// ExpandWarehouseHTTP fetches child subscriptions and merges sites/lives/parses.
-func ExpandWarehouseHTTP(ctx context.Context, doFetch func(ctx context.Context, rawURL string) ([]byte, error), raw *RawConfig, log *slog.Logger) (*RawConfig, error) {
+// WarehouseEntry is a normalized multi-warehouse child.
+type WarehouseEntry struct {
+	Name string
+	URL  string
+}
+
+// ListWarehouseEntries extracts and de-duplicates HTTP child entries (max 100).
+func ListWarehouseEntries(raw *RawConfig) []WarehouseEntry {
 	items := warehouseItems(raw)
 	if len(items) == 0 {
-		return raw, nil
+		return nil
 	}
-
-	type childJob struct {
-		name string
-		url  string
-	}
-	var jobs []childJob
+	var out []WarehouseEntry
 	seen := map[string]struct{}{}
 	for _, it := range items {
 		u := firstNonEmpty(it.URL, it.SourceURL, it.API)
@@ -46,10 +47,28 @@ func ExpandWarehouseHTTP(ctx context.Context, doFetch func(ctx context.Context, 
 				name = "未命名子仓"
 			}
 		}
-		jobs = append(jobs, childJob{name: name, url: u})
-		if len(jobs) >= maxWarehouseChildren {
+		out = append(out, WarehouseEntry{Name: name, URL: u})
+		if len(out) >= maxWarehouseChildren {
 			break
 		}
+	}
+	return out
+}
+
+// ExpandWarehouseHTTP fetches child subscriptions and merges sites/lives/parses.
+func ExpandWarehouseHTTP(ctx context.Context, doFetch func(ctx context.Context, rawURL string) ([]byte, error), raw *RawConfig, log *slog.Logger) (*RawConfig, error) {
+	entries := ListWarehouseEntries(raw)
+	if len(entries) == 0 {
+		return raw, nil
+	}
+
+	type childJob struct {
+		name string
+		url  string
+	}
+	jobs := make([]childJob, 0, len(entries))
+	for _, e := range entries {
+		jobs = append(jobs, childJob{name: e.Name, url: e.URL})
 	}
 
 	merged := &RawConfig{

@@ -9,6 +9,7 @@ import xbmcplugin
 
 from .api_client import APIClient
 from . import list_ui
+from . import subs_ui
 from .play import play_item
 
 
@@ -27,6 +28,34 @@ def dispatch(handle: int, addon, params: Dict[str, Any]) -> None:
 
     if action == "":
         list_ui.show_root(handle, base_url, addon, api)
+        return
+    if action == "subscriptions":
+        subs_ui.show_subscriptions(handle, base_url, addon, api)
+        return
+    if action == "sub_item":
+        subs_ui.show_subscription_item(
+            handle, base_url, addon, api, params.get("subId") or ""
+        )
+        return
+    if action == "sub_add":
+        subs_ui.do_add(addon, api)
+        xbmcplugin.endOfDirectory(handle, succeeded=True, updateListing=True)
+        return
+    if action == "sub_sync":
+        subs_ui.do_sync(addon, api, params.get("subId") or "")
+        xbmcplugin.endOfDirectory(handle, succeeded=True, updateListing=True)
+        return
+    if action == "sub_test":
+        subs_ui.do_test(addon, api, params.get("subId") or "")
+        xbmcplugin.endOfDirectory(handle, succeeded=True, updateListing=True)
+        return
+    if action == "sub_toggle":
+        subs_ui.do_toggle(addon, api, params.get("subId") or "")
+        xbmcplugin.endOfDirectory(handle, succeeded=True, updateListing=True)
+        return
+    if action == "sub_delete":
+        subs_ui.do_delete(addon, api, params.get("subId") or "")
+        xbmcplugin.endOfDirectory(handle, succeeded=True, updateListing=True)
         return
     if action == "categories":
         list_ui.show_categories(handle, base_url, api, params.get("sourceId") or "")
@@ -73,5 +102,4 @@ def dispatch(handle: int, addon, params: Dict[str, Any]) -> None:
         play_item(handle, addon, api, params)
         return
 
-    # Unknown action
     xbmcplugin.endOfDirectory(handle, succeeded=False)

@@ -52,7 +52,7 @@ Kodi 插件 `plugin.video.fntvbox` **只允许**通过本契约访问内容与�
 
 ### 0.3 ID 规则
 
-- `sourceId`：稳定字符串，推荐 `sub_{subscriptionHash}_{site.key}`；单订阅可简化为 `site.key`。  
+- `sourceId`：稳定字符串 `sub_{subscriptionId前8位}_{site.key}`（多订阅/多仓合并时带前缀，避免 key 冲突）。  
 - `mediaId`：源站影片 ID，原样透传（URL encode 后出现在 query）。  
 - `episodeId`：**不**嵌入 `playFrom` 原文，避免 `|` / 特殊字符冲突。
 
@@ -138,22 +138,31 @@ for g, group in urlGroups:
 
 ## 2. 订阅管理
 
+支持 **多条订阅**（对齐 bao-tv-box 多仓模型）：
+
+- `kind`：`single` | `warehouse` | `live`
+- `warehouse` 父项只存索引 URL；`POST .../sync` 或添加时展开为带 `parentId` 的子仓（`kind=single`）
+- 内容聚合只加载 `enabled && kind != warehouse` 的项；父仓启停联动子仓
+- 持久化：`{FNTVBOX_DATA_DIR}/subscriptions.json`（环境变量 `FNTVBOX_SUBSCRIPTION_URL` 仅作首次引导）
+
 ### `GET /api/subscription`
 
-返回当前订阅摘要（不含完整 sites 原始 JSON）。
+返回**聚合摘要**（不含完整 sites 原始 JSON；完整列表见 `GET /api/subscriptions`）。
 
 **成功且无错误：**
 
 ```json
 {
   "url": "https://example.com/tvbox.json",
-  "kind": "single",
+  "kind": "warehouse",
   "loadedAt": "2026-08-08T10:00:00Z",
   "siteCount": 12,
   "skippedUnsupported": 3,
   "liveCount": 2,
   "parseCount": 5,
-  "lastError": null
+  "lastError": null,
+  "subscriptionCount": 5,
+  "childCount": 4
 }
 ```
 
@@ -163,25 +172,6 @@ for g, group in urlGroups:
 - 若存在上次成功缓存：保留 `loadedAt` / 计数等摘要字段，并设置 `lastError`。  
 - 若从未成功：计数可为 0，`loadedAt` 可省略或 null，必须带 `lastError`。  
 - URL 未配置：`subscriptionConfigured` 在 health 为 false；本接口可返回空摘要 + `lastError` 或等价明确状态。
-
-```json
-{
-  "url": "https://example.com/tvbox.json",
-  "kind": "single",
-  "loadedAt": "2026-08-08T09:00:00Z",
-  "siteCount": 12,
-  "skippedUnsupported": 3,
-  "liveCount": 2,
-  "parseCount": 5,
-  "lastError": {
-    "code": "upstream_error",
-    "message": "fetch subscription: status 502",
-    "at": "2026-08-08T10:05:00Z"
-  }
-}
-```
-
-`kind`：`single` | `warehouse` | `live`。
 
 `lastError.code` 建议复用第 7 节错误码：`upstream_error` | `upstream_timeout` | `bad_request` | `internal` 等。
 
@@ -199,11 +189,80 @@ for g, group in urlGroups:
 
 **200**：同 `GET /api/subscription`（可能含 `lastError`）。  
 **400**：URL 无效（语法层，不发起拉取也可判定）。  
-副作用：清空订阅缓存并异步或同步预热；预热失败写入 `lastError`。
+副作用：**upsert** 顶层订阅（同 URL 保留 id；多仓则自动 sync 展开子仓）；**不删除**其它已有订阅；清空目录缓存并预热。
 
 ### `POST /api/subscription/reload`
 
-强制重新拉取。**200**：同 GET（含可能的 `lastError`）。
+强制重新拉取全部启用内容订阅。**200**：同 GET（含可能的 `lastError`）。
+
+### `GET /api/subscriptions`
+
+```json
+{
+  "subscriptions": [
+    {
+      "id": "subscription-abc",
+      "name": "Noimank",
+      "url": "https://example.com/tvboxmuti.json",
+      "kind": "warehouse",
+      "enabled": true,
+      "healthStatus": "healthy",
+      "lastSyncAt": "2026-08-08T10:00:00Z"
+    },
+    {
+      "id": "subscription-abc-child-deadbeefcafe",
+      "name": "FongMI",
+      "url": "https://example.com/0827.json",
+      "kind": "single",
+      "enabled": true,
+      "healthStatus": "unknown",
+      "parentId": "subscription-abc"
+    }
+  ]
+}
+```
+
+### `POST /api/subscriptions`
+
+```json
+{ "url": "https://example.com/tvboxmuti.json", "name": "可选名称" }
+```
+
+探测 kind → 保存；若为 `warehouse` 立即 sync 展开子仓。  
+**200**：`{ subscription, subscriptions }`  
+**400** / **409**（URL 已存在）/ **502**（探测失败）。
+
+### `POST /api/subscriptions/probe`
+
+```json
+{ "url": "https://example.com/tvboxmuti.json" }
+```
+
+**200**：`{ ok, detectedKind, sourceCount, name?, message? }`（多仓时 `sourceCount` 为子仓数）。
+
+### `PATCH /api/subscriptions/{id}`
+
+```json
+{ "enabled": false, "name": "新名称" }
+```
+
+父仓改 `enabled` 时联动全部子仓。**200**：`{ subscription, subscriptions }`。
+
+### `DELETE /api/subscriptions/{id}`
+
+删除订阅；删父仓连带删除子仓。**200**：`{ ok: true, subscriptions }`。
+
+### `POST /api/subscriptions/{id}/sync`
+
+多仓：拉取索引并 reconcile 子仓（同 URL 保留用户 `enabled`）。  
+单仓/直播：刷新健康状态。  
+**200**：`{ ok, subscription, subscriptions, error? }`。
+
+### `POST /api/subscriptions/{id}/test`
+
+连通性探测，**不** reconcile 子仓。**200**：`{ ok, probe, subscription }`。
+
+多源合并时 `sourceId` 形如 `sub_{id8}_{site.key}`，避免子仓 key 冲突。
 
 ---
 

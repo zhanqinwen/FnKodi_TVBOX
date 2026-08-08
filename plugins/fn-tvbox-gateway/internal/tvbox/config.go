@@ -7,9 +7,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"unicode/utf8"
-
 	"github.com/titanous/json5"
+
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/textenc"
 )
 
 const maxConfigBytes = 8 * 1024 * 1024
@@ -63,10 +63,7 @@ func FetchConfigGET(ctx context.Context, client *http.Client, url string) ([]byt
 	if len(data) > maxConfigBytes {
 		return nil, fmt.Errorf("subscription too large: > %d bytes", maxConfigBytes)
 	}
-	if !utf8.Valid(data) {
-		// best-effort: treat as bytes; many CMS are UTF-8
-	}
-	return data, nil
+	return textenc.DecodeBytes(data), nil
 }
 
 // IsWarehouse reports whether the document is a warehouse index.

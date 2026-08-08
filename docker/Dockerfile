@@ -8,10 +8,13 @@ LABEL org.opencontainers.image.title="fnkodi-tvbox" \
       org.opencontainers.image.description="fnOS FPK Kodi + TVBox gateway (no Android)" \
       org.opencontainers.image.source="https://github.com/zhanqinwen/FnKodi_TVBOX"
 
-# curl: health wait in entrypoint. Do not install android/redroid/emulator/jar runtimes.
+# curl: health wait in entrypoint.
+# fonts-noto-cjk: skin.fntvbox Font.xml uses NotoSansCJK-Regular.ttc (missing => 中文方框/乱码).
+# Do not install android/redroid/emulator/jar runtimes.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends curl \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get install -y --no-install-recommends curl fonts-noto-cjk \
+ && rm -rf /var/lib/apt/lists/* \
+ && test -f /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
 
 COPY release/gateway/fn-tvbox-gateway /usr/local/bin/fn-tvbox-gateway
 RUN chmod +x /usr/local/bin/fn-tvbox-gateway

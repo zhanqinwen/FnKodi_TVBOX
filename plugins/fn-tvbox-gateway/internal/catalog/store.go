@@ -6,15 +6,15 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/subs"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/tvbox"
 )
 
-// Snapshot is a successfully loaded subscription.
+// Snapshot is a successfully loaded merged catalog.
 type Snapshot struct {
 	URL                string
 	Kind               string
@@ -26,10 +26,10 @@ type Snapshot struct {
 	Raw                *tvbox.RawConfig
 }
 
-// Store manages subscription load/cache and site lookup.
+// Store manages multi-subscription load/cache and site lookup.
 type Store struct {
 	mu        sync.RWMutex
-	url       string
+	reg       *subs.Registry
 	ttl       time.Duration
 	client    *http.Client
 	log       *slog.Logger
@@ -38,57 +38,84 @@ type Store struct {
 	lastError *tvbox.LastError
 }
 
-// NewStore creates a subscription store.
-func NewStore(subscriptionURL string, ttl time.Duration, client *http.Client, log *slog.Logger) *Store {
+// NewStore creates a catalog store backed by a subscription registry.
+func NewStore(reg *subs.Registry, ttl time.Duration, client *http.Client, log *slog.Logger) *Store {
+	if reg == nil {
+		reg = subs.NewMemory()
+	}
 	return &Store{
-		url:    strings.TrimSpace(subscriptionURL),
+		reg:    reg,
 		ttl:    ttl,
 		client: client,
 		log:    log,
 	}
 }
 
-// Configured reports whether a URL is set.
+// NewStoreFromURL creates an in-memory registry bootstrapped with one URL (tests/compat).
+func NewStoreFromURL(subscriptionURL string, ttl time.Duration, client *http.Client, log *slog.Logger) *Store {
+	reg := subs.NewMemory()
+	subscriptionURL = strings.TrimSpace(subscriptionURL)
+	if subscriptionURL != "" {
+		_, _ = reg.UpsertTopLevel(subscriptionURL, "", subs.KindSingle)
+	}
+	return NewStore(reg, ttl, client, log)
+}
+
+// Registry returns the backing subscription registry.
+func (s *Store) Registry() *subs.Registry { return s.reg }
+
+// Configured reports whether any subscription is registered.
 func (s *Store) Configured() bool {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.url != ""
+	return s.reg != nil && s.reg.Configured()
 }
 
-// URL returns the current subscription URL.
+// URL returns the primary top-level subscription URL.
 func (s *Store) URL() string {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.url
+	if s.reg == nil {
+		return ""
+	}
+	return s.reg.PrimaryURL()
 }
 
-// SetURL validates and sets URL, clearing cache.
+// SetURL upserts a top-level URL without probing (legacy); prefer SubsService.UpsertFromURL.
 func (s *Store) SetURL(raw string) error {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return fmt.Errorf("url is required")
+	if err := subs.ValidateHTTPURL(raw); err != nil {
+		return err
 	}
-	u, err := url.ParseRequestURI(raw)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return fmt.Errorf("invalid url")
-	}
+	_, err := s.reg.UpsertTopLevel(raw, "", subs.KindSingle)
 	s.mu.Lock()
-	s.url = raw
 	s.snap = nil
 	s.expiresAt = time.Time{}
 	s.lastError = nil
 	s.mu.Unlock()
-	return nil
+	return err
 }
 
-// Summary returns the subscription summary (always suitable for HTTP 200).
+// InvalidateCache clears the merged catalog cache.
+func (s *Store) InvalidateCache() {
+	s.mu.Lock()
+	s.snap = nil
+	s.expiresAt = time.Time{}
+	s.mu.Unlock()
+}
+
+// Summary returns the aggregated subscription summary (HTTP 200 friendly).
 func (s *Store) Summary() tvbox.Summary {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	total, children := 0, 0
+	if s.reg != nil {
+		total, children = s.reg.Counts()
+	}
 	sum := tvbox.Summary{
-		URL:       s.url,
-		Kind:      "single",
-		LastError: cloneErr(s.lastError),
+		URL:               s.URL(),
+		Kind:              "single",
+		LastError:         cloneErr(s.lastError),
+		SubscriptionCount: total,
+		ChildCount:        children,
+	}
+	if s.reg != nil && s.reg.HasWarehouse() {
+		sum.Kind = "warehouse"
 	}
 	if s.snap != nil {
 		sum.Kind = s.snap.Kind
@@ -99,7 +126,7 @@ func (s *Store) Summary() tvbox.Summary {
 		sum.LiveCount = s.snap.LiveCount
 		sum.ParseCount = s.snap.ParseCount
 	}
-	if s.url == "" && s.lastError == nil {
+	if !s.Configured() && s.lastError == nil {
 		sum.LastError = &tvbox.LastError{
 			Code:    "bad_request",
 			Message: "subscription url not configured",
@@ -109,13 +136,13 @@ func (s *Store) Summary() tvbox.Summary {
 	return sum
 }
 
-// EnsureLoaded loads subscription if missing/expired. force bypasses TTL.
+// EnsureLoaded loads enabled non-warehouse subscriptions if missing/expired.
 func (s *Store) EnsureLoaded(ctx context.Context, force bool) tvbox.Summary {
 	s.mu.RLock()
-	url := s.url
 	fresh := s.snap != nil && !force && time.Now().Before(s.expiresAt)
+	configured := s.Configured()
 	s.mu.RUnlock()
-	if url == "" {
+	if !configured {
 		return s.Summary()
 	}
 	if fresh {
@@ -127,7 +154,7 @@ func (s *Store) EnsureLoaded(ctx context.Context, force bool) tvbox.Summary {
 	return s.Summary()
 }
 
-// Sites returns supported sites from last success (may be empty).
+// Sites returns supported sites from last success.
 func (s *Store) Sites() []tvbox.SupportedSite {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -139,7 +166,7 @@ func (s *Store) Sites() []tvbox.SupportedSite {
 	return out
 }
 
-// SiteByID finds a supported site by key/id.
+// SiteByID finds a supported site by prefixed source id.
 func (s *Store) SiteByID(id string) (tvbox.SupportedSite, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -154,7 +181,7 @@ func (s *Store) SiteByID(id string) (tvbox.SupportedSite, bool) {
 	return tvbox.SupportedSite{}, false
 }
 
-// Parses returns subscription parses[] from last success.
+// Parses returns merged parses[].
 func (s *Store) Parses() []any {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -164,7 +191,7 @@ func (s *Store) Parses() []any {
 	return append([]any(nil), s.snap.Raw.Parses...)
 }
 
-// Lives returns subscription lives[] from last success.
+// Lives returns merged lives[].
 func (s *Store) Lives() []any {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -175,53 +202,138 @@ func (s *Store) Lives() []any {
 }
 
 func (s *Store) reload(ctx context.Context) error {
-	s.mu.RLock()
-	rawURL := s.url
-	client := s.client
-	log := s.log
-	s.mu.RUnlock()
-	if rawURL == "" {
-		return errors.New("subscription url not configured")
-	}
-
-	data, err := tvbox.FetchConfigGET(ctx, client, rawURL)
-	if err != nil {
-		return classifyFetchErr(err)
-	}
-	raw, err := tvbox.ParseConfigText(data)
-	if err != nil {
-		return &typedErr{code: "upstream_error", msg: err.Error()}
-	}
-
-	kind := "single"
-	if tvbox.IsWarehouse(raw) {
-		kind = "warehouse"
-		raw, err = tvbox.ExpandWarehouseHTTP(ctx, func(ctx context.Context, u string) ([]byte, error) {
-			return tvbox.FetchConfigGET(ctx, client, u)
-		}, raw, log)
-		if err != nil {
-			return classifyFetchErr(err)
+	active := s.reg.ActiveContent()
+	if len(active) == 0 {
+		// Still may have warehouse parents only — treat as empty success with hint.
+		s.mu.Lock()
+		s.snap = &Snapshot{
+			URL:      s.reg.PrimaryURL(),
+			Kind:     kindFromReg(s.reg),
+			LoadedAt: time.Now().UTC(),
+			Raw:      &tvbox.RawConfig{},
 		}
+		s.expiresAt = time.Now().Add(s.ttl)
+		if s.reg.Configured() {
+			s.lastError = nil
+		}
+		s.mu.Unlock()
+		return nil
 	}
 
-	filtered := tvbox.FilterSites(raw.Sites, log)
+	merged := &tvbox.RawConfig{}
+	var allSites []tvbox.SupportedSite
+	skipped := 0
+	var firstErr error
+	loadedAny := false
+
+	for _, sub := range active {
+		if sub.Kind == subs.KindLive {
+			// Live-only subscriptions contribute to live service via URL list entries.
+			merged.Lives = append(merged.Lives, map[string]any{"name": sub.Name, "url": sub.URL})
+			loadedAny = true
+			continue
+		}
+		data, err := tvbox.FetchConfigGET(ctx, s.client, sub.URL)
+		if err != nil {
+			if s.log != nil {
+				s.log.Info("subscription_child_fetch_failed", "id", sub.ID, "url", sub.URL, "err", err)
+			}
+			if firstErr == nil {
+				firstErr = classifyFetchErr(err)
+			}
+			continue
+		}
+		raw, err := tvbox.ParseConfigText(data)
+		if err != nil {
+			if firstErr == nil {
+				firstErr = &typedErr{code: "upstream_error", msg: err.Error()}
+			}
+			continue
+		}
+		// Do not expand warehouse here — children are first-class registry entries.
+		if tvbox.IsWarehouse(raw) {
+			if s.log != nil {
+				s.log.Info("skip_warehouse_document_in_aggregate", "id", sub.ID, "url", sub.URL)
+			}
+			continue
+		}
+		filtered := tvbox.FilterSites(raw.Sites, s.log)
+		prefix := sourcePrefix(sub.ID)
+		for _, site := range filtered.Supported {
+			site.Key = prefix + site.Key
+			allSites = append(allSites, site)
+		}
+		skipped += filtered.SkippedUnsupported
+		merged.Sites = append(merged.Sites, raw.Sites...)
+		merged.Lives = append(merged.Lives, raw.Lives...)
+		merged.Parses = append(merged.Parses, raw.Parses...)
+		loadedAny = true
+	}
+
+	if !loadedAny && firstErr != nil {
+		return firstErr
+	}
+
+	kind := kindFromReg(s.reg)
+	if len(active) == 1 && active[0].ParentID == "" {
+		kind = active[0].Kind
+		if kind == "" {
+			kind = "single"
+		}
+	} else if s.reg.HasWarehouse() {
+		kind = "warehouse"
+	} else if len(active) > 1 {
+		kind = "single"
+	}
+
 	snap := &Snapshot{
-		URL:                rawURL,
+		URL:                s.reg.PrimaryURL(),
 		Kind:               kind,
 		LoadedAt:           time.Now().UTC(),
-		Sites:              filtered.Supported,
-		SkippedUnsupported: filtered.SkippedUnsupported,
-		LiveCount:          len(raw.Lives),
-		ParseCount:         len(raw.Parses),
-		Raw:                raw,
+		Sites:              allSites,
+		SkippedUnsupported: skipped,
+		LiveCount:          len(merged.Lives),
+		ParseCount:         len(merged.Parses),
+		Raw:                merged,
 	}
 
 	s.mu.Lock()
 	s.snap = snap
 	s.expiresAt = time.Now().Add(s.ttl)
-	s.lastError = nil
+	if firstErr != nil && len(allSites) == 0 {
+		// keep lastError via setError path
+	} else {
+		s.lastError = nil
+	}
 	s.mu.Unlock()
+
+	if firstErr != nil && len(allSites) == 0 {
+		return firstErr
+	}
 	return nil
+}
+
+func sourcePrefix(subID string) string {
+	id := strings.TrimSpace(subID)
+	if id == "" {
+		return "sub_x_"
+	}
+	// sub_{id8}_
+	short := id
+	if len(short) > 8 {
+		short = short[:8]
+	}
+	return fmt.Sprintf("sub_%s_", short)
+}
+
+func kindFromReg(r *subs.Registry) string {
+	if r == nil {
+		return "single"
+	}
+	if r.HasWarehouse() {
+		return "warehouse"
+	}
+	return "single"
 }
 
 func (s *Store) setError(err error) {

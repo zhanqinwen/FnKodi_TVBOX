@@ -115,20 +115,72 @@ class APIClient:
         return self._request("PUT", "/api/subscription", body={"url": url})
 
     def sync_subscription_from_settings(self) -> None:
+        """Upsert settings URL into the multi-subscription registry (does not remove others)."""
         url = (self._addon.getSetting("subscription_url") or "").strip()
         if not url:
             return
         try:
-            current = self.get_subscription()
-            if (current.get("url") or "").strip() == url and not current.get("lastError"):
+            listing = self.list_subscriptions()
+            urls = {
+                (s.get("url") or "").strip()
+                for s in (listing.get("subscriptions") or [])
+                if not s.get("parentId")
+            }
+            if url in urls:
                 return
         except APIError:
             pass
         try:
             self.put_subscription(url)
         except APIError:
-            # notification already shown
             return
+
+    def list_subscriptions(self) -> Dict[str, Any]:
+        return self._request("GET", "/api/subscriptions")
+
+    def add_subscription(self, url: str, name: str = "") -> Dict[str, Any]:
+        body: Dict[str, Any] = {"url": url}
+        if name:
+            body["name"] = name
+        return self._request("POST", "/api/subscriptions", body=body)
+
+    def probe_subscription(self, url: str) -> Dict[str, Any]:
+        return self._request("POST", "/api/subscriptions/probe", body={"url": url})
+
+    def patch_subscription(
+        self,
+        sub_id: str,
+        enabled: Optional[bool] = None,
+        name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        body: Dict[str, Any] = {}
+        if enabled is not None:
+            body["enabled"] = enabled
+        if name is not None:
+            body["name"] = name
+        return self._request(
+            "PATCH",
+            "/api/subscriptions/%s" % quote(sub_id, safe=""),
+            body=body,
+        )
+
+    def delete_subscription(self, sub_id: str) -> Dict[str, Any]:
+        return self._request(
+            "DELETE",
+            "/api/subscriptions/%s" % quote(sub_id, safe=""),
+        )
+
+    def sync_subscription(self, sub_id: str) -> Dict[str, Any]:
+        return self._request(
+            "POST",
+            "/api/subscriptions/%s/sync" % quote(sub_id, safe=""),
+        )
+
+    def test_subscription(self, sub_id: str) -> Dict[str, Any]:
+        return self._request(
+            "POST",
+            "/api/subscriptions/%s/test" % quote(sub_id, safe=""),
+        )
 
     def sources(self) -> Dict[str, Any]:
         return self._request("GET", "/api/sources")

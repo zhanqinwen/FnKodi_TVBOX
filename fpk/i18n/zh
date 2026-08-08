@@ -15,7 +15,7 @@ config_item1_label="是否需要支持 UPnP/DLNA 及 AirPlay, 以便通过局域
 config_item1_options1="是 (host)"
 config_item1_options2="否 (bridge)"
 config_subscription_label="TVBox 订阅 URL"
-config_subscription_description="TVBox 接口地址（建议使用自建仅 CMS 的测试接口）"
+config_subscription_description="单仓或多仓索引 JSON 地址（多仓保存后会自动展开子仓；建议自建仅 CMS 的测试接口）"
 config_subscription_required="请填写 TVBox 订阅 URL"
 
 install_stepTitle="安装向导"
@@ -27,7 +27,7 @@ install_item1_label="是否需要支持 UPnP/DLNA 及 AirPlay, 以便通过局�
 install_item1_options1="是 (host)"
 install_item1_options2="否 (bridge)"
 install_subscription_label="TVBox 订阅 URL"
-install_subscription_description="TVBox 接口地址（建议使用自建仅 CMS 的测试接口）"
+install_subscription_description="单仓或多仓索引 JSON 地址（多仓会自动展开子仓；安装后可在插件「订阅管理」中增删启停）"
 install_subscription_required="请填写 TVBox 订阅 URL"
 
 uninstall_stepTitle="卸载向导"

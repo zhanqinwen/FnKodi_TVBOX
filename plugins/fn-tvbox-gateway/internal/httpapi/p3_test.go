@@ -40,7 +40,7 @@ https://example/cctv1.m3u8
 
 	cfg := &config.Config{Version: "0.1.0", CacheTTL: time.Minute, HTTPTimeout: 3 * time.Second, Listen: "127.0.0.1:18765"}
 	client := subSrv.Client()
-	store := catalog.NewStore(subSrv.URL+"/s.json", cfg.CacheTTL, client, nil)
+	store := catalog.NewStoreFromURL(subSrv.URL+"/s.json", cfg.CacheTTL, client, nil)
 	resolver := &player.Resolver{
 		HTTP:     client,
 		T4:       &t4.Client{HTTP: client},
@@ -56,9 +56,14 @@ https://example/cctv1.m3u8
 	})
 
 	store.EnsureLoaded(context.Background(), true)
+	sites := store.Sites()
+	if len(sites) != 1 {
+		t.Fatalf("sites=%d", len(sites))
+	}
+	sid := sites[0].Key
 
 	rr := httptest.NewRecorder()
-	body := `{"sourceId":"cms1","mediaId":"1","episodeId":"0:0","playUrl":"https://cdn.example/a.m3u8","playFrom":"线路1"}`
+	body := `{"sourceId":"` + sid + `","mediaId":"1","episodeId":"0:0","playUrl":"https://cdn.example/a.m3u8","playFrom":"L1"}`
 	mux.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/api/player/resolve", strings.NewReader(body)))
 	if rr.Code != 200 || !strings.Contains(rr.Body.String(), `"parse":0`) {
 		t.Fatalf("resolve: %s", rr.Body.String())
@@ -99,7 +104,7 @@ func TestProxySlowBodyNotCutByShortTimeout(t *testing.T) {
 	cfg := &config.Config{Version: "0.1.0", Listen: "127.0.0.1:18765"}
 	mux := httpapi.NewMux(httpapi.Deps{
 		Cfg:   cfg,
-		Store: catalog.NewStore("", time.Minute, nil, nil),
+		Store: catalog.NewStoreFromURL("", time.Minute, nil, nil),
 		CMS:   &cms.Client{},
 		T4:    &t4.Client{},
 		Proxy: store,

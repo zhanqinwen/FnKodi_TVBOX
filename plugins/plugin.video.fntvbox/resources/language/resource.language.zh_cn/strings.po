@@ -23,7 +23,7 @@ msgstr "网关地址"
 
 msgctxt "#30003"
 msgid "Subscription URL"
-msgstr "订阅 URL"
+msgstr "订阅 URL（单仓/多仓，引导写入）"
 
 msgctxt "#30010"
 msgid "Search"
@@ -68,3 +68,95 @@ msgstr "播放解析失败"
 msgctxt "#30026"
 msgid "Request failed"
 msgstr "请求失败"
+
+msgctxt "#30030"
+msgid "Subscriptions"
+msgstr "订阅管理"
+
+msgctxt "#30031"
+msgid "Single"
+msgstr "单仓"
+
+msgctxt "#30032"
+msgid "Warehouse"
+msgstr "多仓"
+
+msgctxt "#30033"
+msgid "Live"
+msgstr "直播"
+
+msgctxt "#30034"
+msgid "Child"
+msgstr "子仓"
+
+msgctxt "#30035"
+msgid "Add subscription"
+msgstr "添加订阅"
+
+msgctxt "#30036"
+msgid "On"
+msgstr "启用"
+
+msgctxt "#30037"
+msgid "Off"
+msgstr "停用"
+
+msgctxt "#30038"
+msgid "from"
+msgstr "来自"
+
+msgctxt "#30039"
+msgid "Subscription not found"
+msgstr "订阅不存在"
+
+msgctxt "#30040"
+msgid "Sync now"
+msgstr "立即同步"
+
+msgctxt "#30041"
+msgid "Test connection"
+msgstr "测试连接"
+
+msgctxt "#30042"
+msgid "Disable"
+msgstr "停用"
+
+msgctxt "#30043"
+msgid "Enable"
+msgstr "启用"
+
+msgctxt "#30044"
+msgid "Delete"
+msgstr "删除"
+
+msgctxt "#30045"
+msgid "Subscription / warehouse URL"
+msgstr "订阅或多仓索引 URL"
+
+msgctxt "#30046"
+msgid "Warehouse added with %d children"
+msgstr "多仓已添加并展开 %d 个子仓"
+
+msgctxt "#30047"
+msgid "Subscription added"
+msgstr "订阅已添加"
+
+msgctxt "#30048"
+msgid "Sync complete"
+msgstr "同步完成"
+
+msgctxt "#30049"
+msgid "OK"
+msgstr "正常"
+
+msgctxt "#30050"
+msgid "Updated"
+msgstr "已更新"
+
+msgctxt "#30051"
+msgid "Delete this subscription?"
+msgstr "确定删除此订阅？"
+
+msgctxt "#30052"
+msgid "Deleted"
+msgstr "已删除"

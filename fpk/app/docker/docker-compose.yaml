@@ -1,6 +1,6 @@
 services:
   kodi:
-    image: fnkodi-tvbox:0.1.0
+    image: fnkodi-tvbox:0.2.0
     container_name: fnkodi-tvbox
     restart: unless-stopped
     environment:

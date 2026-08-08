@@ -18,6 +18,7 @@ import (
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/logging"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/player"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/proxy"
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/subs"
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/t4"
 )
 
@@ -33,9 +34,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	reg, err := subs.Load(cfg.DataDir, cfg.SubscriptionURL)
+	if err != nil {
+		log.Error("subscriptions_load_failed", "err", err)
+		os.Exit(1)
+	}
+
 	short := httpclient.NewShort(cfg.HTTPTimeout, cfg.UserAgent)
 	proxyClient := httpclient.NewProxy(cfg.ProxyHeaderTimeout, cfg.UserAgent)
-	store := catalog.NewStore(cfg.SubscriptionURL, cfg.CacheTTL, short, log)
+	store := catalog.NewStore(reg, cfg.CacheTTL, short, log)
+	subSvc := &subs.Service{Reg: reg, Client: short, Log: log}
 	cmsClient := &cms.Client{HTTP: short}
 	t4Client := &t4.Client{HTTP: short}
 
@@ -54,6 +62,7 @@ func main() {
 	mux := httpapi.NewMux(httpapi.Deps{
 		Cfg:      cfg,
 		Store:    store,
+		Subs:     subSvc,
 		CMS:      cmsClient,
 		T4:       t4Client,
 		Resolver: resolver,
@@ -67,10 +76,18 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	if cfg.SubscriptionURL != "" {
+	if reg.Configured() {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), cfg.HTTPTimeout+2*time.Second)
 			defer cancel()
+			// Refine top-level kinds and expand warehouses (children skipped).
+			for _, s := range reg.List() {
+				if s.ParentID != "" {
+					continue
+				}
+				_ = subSvc.Sync(ctx, s.ID)
+			}
+			store.InvalidateCache()
 			_ = store.EnsureLoaded(ctx, true)
 		}()
 	}

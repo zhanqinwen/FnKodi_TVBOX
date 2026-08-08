@@ -172,7 +172,7 @@ plugins/skin.fntvbox/
 | 现象 | 处理 |
 |------|------|
 | Skin 加载失败 | 查 `kodi.log` XML 错误行号 |
-| 字体方框 | 中文字体未进 Font.xml；确认系统存在 `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc` |
+| 字体方框 / 切换皮肤后满屏乱码 | 镜像须安装 `fonts-noto-cjk`；确认 `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`；Arial 字集勿再用缺失的 `arial.ttf` |
 | 焦点看不见 | 补 focus/unfocus 材质 |
 | 首页进不去片库 | 检查 plugin:// URL 与插件是否启用 |
 | 升级后仍旧皮 | 数据卷缓存旧 skin；升 addon 版本或清 addons 对应目录 |

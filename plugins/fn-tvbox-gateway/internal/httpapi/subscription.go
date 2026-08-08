@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/catalog"
+	"github.com/zhanqinwen/FnKodi_TVBOX/fn-tvbox-gateway/internal/subs"
 )
 
 type putSubscriptionBody struct {
@@ -18,14 +19,23 @@ func handleSubscriptionGet(store *catalog.Store) http.HandlerFunc {
 	}
 }
 
-func handleSubscriptionPut(store *catalog.Store) http.HandlerFunc {
+func handleSubscriptionPut(store *catalog.Store, svc *subs.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var body putSubscriptionBody
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			writeError(w, http.StatusBadRequest, "bad_request", "invalid json body")
 			return
 		}
-		if err := store.SetURL(body.URL); err != nil {
+		if svc != nil {
+			if _, err := svc.UpsertFromURL(r.Context(), body.URL); err != nil {
+				if subs.IsBadURL(err) {
+					writeError(w, http.StatusBadRequest, "bad_request", err.Error())
+					return
+				}
+				// upsert may succeed with sync error; still invalidate and return summary
+			}
+			store.InvalidateCache()
+		} else if err := store.SetURL(body.URL); err != nil {
 			writeError(w, http.StatusBadRequest, "bad_request", err.Error())
 			return
 		}

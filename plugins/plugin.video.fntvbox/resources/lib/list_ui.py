@@ -65,6 +65,12 @@ def show_root(handle: int, base_url: str, addon, api: APIClient) -> None:
 
     _add_folder(handle, base_url, addon.getLocalizedString(30010) or "Search", "search")
     _add_folder(handle, base_url, addon.getLocalizedString(30011) or "Live TV", "live_groups")
+    _add_folder(
+        handle,
+        base_url,
+        addon.getLocalizedString(30030) or "Subscriptions",
+        "subscriptions",
+    )
 
     for src in sources:
         if src.get("hidden"):
