@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="skin.fntvbox" version="0.2.0" name="FnKodi TVBox" provider-name="FnKodi_TVBOX">
+	<requires>
+		<import addon="xbmc.gui" version="5.17.0"/>
+	</requires>
+	<extension point="xbmc.gui.skin" debugging="false">
+		<res width="1920" height="1440" aspect="4:3" default="false" folder="xml" />
+		<res width="1920" height="1280" aspect="3:2" default="false" folder="xml" />
+		<res width="1920" height="1200" aspect="16:10" default="false" folder="xml" />
+		<res width="2040" height="1080" aspect="17:9" default="false" folder="xml" />
+		<res width="1920" height="1080" aspect="16:9" default="true" folder="xml" />
+		<res width="2560" height="1080" aspect="21:9" default="false" folder="xml" />
+		<res width="2338" height="1080" aspect="19.5:9" default="false" folder="xml" />
+		<res width="2160" height="1080" aspect="18:9" default="false" folder="xml" />
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<platform>all</platform>
+		<license>CC BY-SA 4.0, GNU GENERAL PUBLIC LICENSE Version 2.0</license>
+		<source>https://github.com/zhanqinwen/FnKodi_TVBOX</source>
+		<assets>
+			<icon>resources/icon.png</icon>
+			<fanart>resources/fanart.jpg</fanart>
+		</assets>
+		<summary lang="en_GB">FnKodi TVBox skin (Estuary-based)</summary>
+		<summary lang="zh_CN">FnKodi TVBox 皮肤（基于 Estuary）</summary>
+		<description lang="en_GB">TV-oriented skin focused on plugin.video.fntvbox. Based on Kodi Estuary (Team Kodi). Skin handles layout/focus only; playback goes through the video addon and local gateway.</description>
+		<description lang="zh_CN">面向电视的自定义皮肤，首页聚焦 plugin.video.fntvbox。基于 Kodi Estuary（Team Kodi）。Skin 只负责窗口/焦点/布局；数据与播放仍走视频插件与本机网关。</description>
+		<disclaimer lang="en_GB">Based on Estuary. Disabling this skin falls back to system Estuary; the video addon remains usable.</disclaimer>
+		<disclaimer lang="zh_CN">基于 Estuary。禁用本皮肤后可回退系统 Estuary，视频插件路径不受影响。</disclaimer>
+	</extension>
+</addon>

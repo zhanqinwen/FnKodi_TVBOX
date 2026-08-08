@@ -25,7 +25,8 @@ Kodi 插件 `plugin.video.fntvbox` **只允许**通过本契约访问内容与�
 | `FNTVBOX_SUBSCRIPTION_URL` | （空） | TVBox 单仓/多仓/直播订阅 URL |
 | `FNTVBOX_DATA_DIR` | `/var/lib/fn-tvbox` | 缓存与偏好持久化目录 |
 | `FNTVBOX_CACHE_TTL_SEC` | `300` | 订阅 JSON 缓存秒数 |
-| `FNTVBOX_HTTP_TIMEOUT_MS` | `8000` | **短请求**整体超时：订阅/CMS/T4/parses/元数据/搜索 |
+| `FNTVBOX_MEDIA_CACHE_TTL_SEC` | `900` | 分类/列表响应 JSON 内存缓存秒数 |
+| `FNTVBOX_HTTP_TIMEOUT_MS` | `8000` | **短请求**整体超时：订阅/CMS/T4/parses/元数据/搜索（聚合搜索每源同此） |
 | `FNTVBOX_PROXY_HEADER_TIMEOUT_MS` | `15000` | **仅媒体代理**回源的 ResponseHeaderTimeout（首字节/响应头）；**不是**整段播放时长超时 |
 | `FNTVBOX_USER_AGENT` | `FnKodiTVBox/1.0` | 默认 UA |
 

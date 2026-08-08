@@ -1,0 +1,32 @@
+services:
+  kodi:
+    image: fnkodi-tvbox:0.1.0
+    container_name: fnkodi-tvbox
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - LANG=zh_CN.UTF-8
+      - FNTVBOX_SUBSCRIPTION_URL=${wizard_subscription_url:-}
+      - FNTVBOX_LISTEN=127.0.0.1:18765
+      - FNTVBOX_CACHE_TTL_SEC=300
+      - FNTVBOX_MEDIA_CACHE_TTL_SEC=900
+      - FNTVBOX_HTTP_TIMEOUT_MS=8000
+      - FNTVBOX_PROXY_HEADER_TIMEOUT_MS=15000
+      - FNTVBOX_GATEWAY_MAX_CRASHES=10
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/snd:/dev/snd
+      - /dev/input:/dev/input
+    volumes:
+      - /run/udev:/run/udev:ro
+      - /var/apps/fnkodi-tvbox/shares/kodi/config:/root/.kodi
+      - /var/apps/fnkodi-tvbox/shares/tvbox/data:/var/lib/fn-tvbox
+    cap_add:
+      - SYS_ADMIN
+      - SYS_RAWIO
+    network_mode: ${wizard_airplay_support:-bridge}
+    ports:
+      - 8080:8080
+      - 9090:9090
+      - 9777:9777/udp
+    shm_size: "1gb"

@@ -1,0 +1,52 @@
+[
+  {
+    "stepTitle": "${wizard.install_stepTitle}",
+    "items": [
+      {
+        "type": "tips",
+        "helpText": "${wizard.install_item1_helpText}"
+      },
+      {
+        "type": "tips",
+        "helpText": "${wizard.install_item2_helpText}"
+      },
+      {
+        "type": "tips",
+        "helpText": "${wizard.install_item3_helpText}"
+      },
+      {
+        "type": "tips",
+        "helpText": "${wizard.install_item4_helpText}"
+      },
+      {
+        "type": "text",
+        "field": "wizard_subscription_url",
+        "label": "${wizard.install_subscription_label}",
+        "initValue": "",
+        "description": "${wizard.install_subscription_description}",
+        "rules": [
+          {
+            "required": true,
+            "message": "${wizard.install_subscription_required}"
+          }
+        ]
+      },
+      {
+        "type": "radio",
+        "field": "wizard_airplay_support",
+        "label": "${wizard.install_item1_label}",
+        "initValue": "bridge",
+        "options": [
+          {
+            "label": "${wizard.install_item1_options1}",
+            "value": "host"
+          },
+          {
+            "label": "${wizard.install_item1_options2}",
+            "value": "bridge"
+          }
+        ]
+      }
+    ]
+  }
+]

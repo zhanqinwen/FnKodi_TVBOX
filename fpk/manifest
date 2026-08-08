@@ -1,0 +1,14 @@
+appname               = fnkodi-tvbox
+version               = 0.1.0
+display_name          = "${common.display_name}"
+desc                  = "${common.desc}"
+platform              = all
+source                = thirdparty
+desktop_uidir         = ui
+desktop_applaunchname = fnkodi-tvbox.Application
+maintainer            = FnKodi_TVBOX
+maintainer_url        = https://github.com
+distributor           = FnKodi_TVBOX
+distributor_url       = https://github.com
+service_port          = 8080,9090,9777
+checkport             = true

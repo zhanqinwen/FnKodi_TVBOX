@@ -1,0 +1,30 @@
+{
+  "docker-project": {
+    "projects": [
+      {
+        "name": "fnkodi-tvbox",
+        "path": "docker"
+      }
+    ]
+  },
+  "data-share": {
+    "shares": [
+      {
+        "name": "kodi",
+        "permission": {
+          "rw": [
+            "docker-fnkodi-tvbox"
+          ]
+        }
+      },
+      {
+        "name": "tvbox",
+        "permission": {
+          "rw": [
+            "docker-fnkodi-tvbox"
+          ]
+        }
+      }
+    ]
+  }
+}

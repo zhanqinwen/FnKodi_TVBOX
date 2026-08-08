@@ -1,0 +1,38 @@
+[common]
+display_name="FnKodi TVBox"
+desc="Kodi-based TVBox VOD/live app with HDMI/DRM output and an embedded gateway."
+
+[entry]
+title="Kodi Control"
+
+[wizard]
+config_stepTitle="Configuration Wizard"
+config_item1_helpText="You are about to modify FnKodi TVBox"
+config_item2_helpText="1. This program will directly access physical devices (monitor, audio devices, keyboard, mouse). Disabling this program will release these devices."
+config_item3_helpText="2. The default username and password for the Kodi Control interface is <strong>kodi:kodi</strong>. Please change it on the settings page after the first login."
+config_item4_helpText="3. Remote controls:<br/>  * Cast Kodi (browser extension)<br/>  * Kore (Android app)<br/>  * SYBU for Kodi (iOS app)<br/>"
+config_item1_label="Do you need to support UPnP/DLNA and AirPlay for streaming over the local network?"
+config_item1_options1="Yes (host)"
+config_item1_options2="No (bridge)"
+config_subscription_label="TVBox subscription URL"
+config_subscription_description="TVBox API URL (a self-hosted CMS-only test endpoint is recommended)"
+config_subscription_required="Please enter the TVBox subscription URL"
+
+install_stepTitle="Install Wizard"
+install_item1_helpText="You are about to install FnKodi TVBox"
+install_item2_helpText="1. This program will directly access physical devices (monitor, audio devices, keyboard, mouse). Disabling this program will release these devices."
+install_item3_helpText="2. The default username and password for the Kodi Control interface is <strong>kodi:kodi</strong>. Please change it on the settings page after the first login."
+install_item4_helpText="3. Before install, docker load the <strong>fnkodi-tvbox</strong> image; the tag must match the app version."
+install_item1_label="Do you need to support UPnP/DLNA and AirPlay for streaming over the local network?"
+install_item1_options1="Yes (host)"
+install_item1_options2="No (bridge)"
+install_subscription_label="TVBox subscription URL"
+install_subscription_description="TVBox API URL (a self-hosted CMS-only test endpoint is recommended)"
+install_subscription_required="Please enter the TVBox subscription URL"
+
+uninstall_stepTitle="Uninstall Wizard"
+uninstall_item1_helpText="You are about to uninstall this application. Please select how to handle application data:"
+uninstall_item1_label="Data retention options"
+uninstall_item1_options1="Retain data - can be restored during reinstallation! (Recommended)"
+uninstall_item1_options2="Delete data - this operation is irreversible!"
+uninstall_item1_required="Please select data retention options"

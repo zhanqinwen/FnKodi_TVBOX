@@ -1,0 +1,38 @@
+[common]
+display_name="FnKodi TVBox"
+desc="基于 Kodi 的 TVBox 点播/直播应用，HDMI/DRM 直出，内置网关。"
+
+[entry]
+title="Kodi 控制"
+
+[wizard]
+config_stepTitle="配置向导"
+config_item1_helpText="您即将修改 FnKodi TVBox"
+config_item2_helpText="1. 本程序将直接调用物理设备（显示器、音频设备、键盘、鼠标），停用此程序即可释放这些设备。"
+config_item3_helpText="2. Kodi 控制 界面的默认用户名和密码为 <strong>kodi:kodi</strong>，请在首次登录后前往设置页面修改。"
+config_item4_helpText="3. 遥控器：<br/>  * Cast Kodi（浏览器扩展）<br/>  * Kore（Android 应用）<br/>  * SYBU for Kodi（iOS 应用）<br/>"
+config_item1_label="是否需要支持 UPnP/DLNA 及 AirPlay, 以便通过局域网投屏"
+config_item1_options1="是 (host)"
+config_item1_options2="否 (bridge)"
+config_subscription_label="TVBox 订阅 URL"
+config_subscription_description="TVBox 接口地址（建议使用自建仅 CMS 的测试接口）"
+config_subscription_required="请填写 TVBox 订阅 URL"
+
+install_stepTitle="安装向导"
+install_item1_helpText="您即将安装 FnKodi TVBox"
+install_item2_helpText="1. 本程序将直接调用物理设备（显示器、音频设备、键盘、鼠标），停用此程序即可释放这些设备。"
+install_item3_helpText="2. Kodi 控制 界面的默认用户名和密码为 <strong>kodi:kodi</strong>，请在首次登录后前往设置页面修改。"
+install_item4_helpText="3. 安装前请先在本机 docker load 镜像 <strong>fnkodi-tvbox</strong>，标签须与应用版本一致。"
+install_item1_label="是否需要支持 UPnP/DLNA 及 AirPlay, 以便通过局域网投屏"
+install_item1_options1="是 (host)"
+install_item1_options2="否 (bridge)"
+install_subscription_label="TVBox 订阅 URL"
+install_subscription_description="TVBox 接口地址（建议使用自建仅 CMS 的测试接口）"
+install_subscription_required="请填写 TVBox 订阅 URL"
+
+uninstall_stepTitle="卸载向导"
+uninstall_item1_helpText="您即将卸载此应用。请选择如何处理应用数据："
+uninstall_item1_label="数据保留选项"
+uninstall_item1_options1="保留数据 - 重安装时可恢复！（推荐）"
+uninstall_item1_options2="删除数据 - 此操作不可恢复！"
+uninstall_item1_required="请选择数据保留选项"

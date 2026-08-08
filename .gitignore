@@ -1,0 +1,17 @@
+release/**
+!release/**/.gitkeep
+*.fpk
+*.tar
+*.tar.gz
+.DS_Store
+Thumbs.db
+tools/fnpack
+tools/fnpack.exe
+plugins/fn-tvbox-gateway/bin/
+plugins/fn-tvbox-gateway/dist/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+*.log
+tmp/

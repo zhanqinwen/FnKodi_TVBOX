@@ -1,0 +1,70 @@
+# Kodi Media Center language file
+# Addon Name: FnKodi TVBox
+# Addon id: plugin.video.fntvbox
+msgid ""
+msgstr ""
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgctxt "#30000"
+msgid "FnKodi TVBox"
+msgstr "FnKodi TVBox"
+
+msgctxt "#30001"
+msgid "General"
+msgstr "常规"
+
+msgctxt "#30002"
+msgid "Gateway URL"
+msgstr "网关地址"
+
+msgctxt "#30003"
+msgid "Subscription URL"
+msgstr "订阅 URL"
+
+msgctxt "#30010"
+msgid "Search"
+msgstr "搜索"
+
+msgctxt "#30011"
+msgid "Live TV"
+msgstr "直播"
+
+msgctxt "#30012"
+msgid "Next page"
+msgstr "下一页"
+
+msgctxt "#30013"
+msgid "Enter search keyword"
+msgstr "输入搜索关键词"
+
+msgctxt "#30020"
+msgid "Gateway unreachable"
+msgstr "无法连接网关"
+
+msgctxt "#30021"
+msgid "API version mismatch"
+msgstr "网关契约版本不匹配"
+
+msgctxt "#30022"
+msgid "Subscription failed"
+msgstr "订阅失败"
+
+msgctxt "#30023"
+msgid "No supported sources"
+msgstr "无可用源（均为不支持类型）"
+
+msgctxt "#30024"
+msgid "No sources"
+msgstr "暂无源"
+
+msgctxt "#30025"
+msgid "Resolve failed"
+msgstr "播放解析失败"
+
+msgctxt "#30026"
+msgid "Request failed"
+msgstr "请求失败"

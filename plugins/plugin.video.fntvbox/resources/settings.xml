@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<settings>
+  <category label="30001">
+    <setting id="gateway_base" type="text" label="30002" default="http://127.0.0.1:18765"/>
+    <setting id="subscription_url" type="text" label="30003" default=""/>
+  </category>
+</settings>

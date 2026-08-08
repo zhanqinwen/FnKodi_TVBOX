@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.fntvbox" name="FnKodi TVBox" version="0.2.0" provider-name="FnKodi_TVBOX">
+  <requires>
+    <import addon="xbmc.python" version="3.0.1"/>
+  </requires>
+  <extension point="xbmc.python.pluginsource" library="main.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <platform>all</platform>
+    <summary lang="zh_cn">飞牛 TVBox 视频插件</summary>
+    <summary lang="en_GB">FnKodi TVBox video addon</summary>
+    <description lang="zh_cn">通过本机网关浏览 TVBox 订阅源、搜索、点播与直播。默认 Estuary 皮肤即可使用。禁止在插件内爬站。</description>
+    <description lang="en_GB">Browse TVBox sources via local gateway. Works with default Estuary skin. No scraping inside the addon.</description>
+    <assets>
+      <icon>icon.png</icon>
+      <fanart>fanart.jpg</fanart>
+    </assets>
+  </extension>
+</addon>
